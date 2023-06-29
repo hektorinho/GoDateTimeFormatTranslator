@@ -7,51 +7,51 @@ import (
 	"strings"
 )
 
+// Decoder typ decode the incoming format string, it uses an io.Reader to make it
+// versatile for the user.
 type Decoder struct {
-	r   *bufio.Reader
+	//  translates the io.Reader toa  bufioReader
+	r *bufio.Reader
+	//  the current Token
 	tok Token
 
+	// User specified Validity function in case user don't agree with the default settings
+	// There are many types of date formatting out there and the idea is to make
+	// it as versatile as possible.
 	CheckValidFunc func(byte, byte) bool
 }
 
+// Returns a new pointer to a Decoder
 func NewDecoder(r io.Reader) *Decoder {
 	return &Decoder{r: bufio.NewReader(r), CheckValidFunc: CheckNextPartOfToken}
 }
 
+// In case you want to change the CheckValidFunc, set it here.
 func (d *Decoder) SetCheckValidFunc(fn func(byte, byte) bool) {
 	d.CheckValidFunc = fn
 }
 
+// The token object stores each token.
 type Token struct {
-	Type   string
+	// Type is every type of token.
+	Type string
+	// Length of the token in case that is needed
 	Length int
 
-	dateType    DateType
+	// current read byte
 	currentByte byte
-	nextByte    byte
-	prevByte    byte
-	idx         int
+	// peeked next byte
+	nextByte byte
+	// previous byte
+	prevByte byte
+	// index of current byte
+	idx int
 
-	lastByte       bool
-	validDateToken bool
+	// check if its the last byte in the formatting string
+	lastByte bool
 }
 
-type DateType uint8
-
-const (
-	Year DateType = iota
-	Month
-	Day
-	Hour
-	Minute
-	Second
-	Fractional
-
-	DayNightDivision
-	Timezone
-	TimezoneLocation
-)
-
+// Reads each formatting token ie: "YYYY", "MM", "dd" etc
 func (d *Decoder) Token() (Token, error) {
 	var tok Token
 	for {
@@ -97,6 +97,7 @@ func (d *Decoder) Token() (Token, error) {
 	}
 }
 
+// Reads through all tokens within a formatting string
 func (d *Decoder) ReadTokens() ([]Token, error) {
 	var tokens []Token
 	for {
@@ -112,10 +113,14 @@ func (d *Decoder) ReadTokens() ([]Token, error) {
 	return tokens, nil
 }
 
+// Err bad format is returned if the format can not be translated in to a Goland
+// time.Time parsing object
 var (
 	ErrBadFormat = errors.New("format: bad format, not matching dictionary")
 )
 
+// Translate does the heavy lifting and read all tokens, then translates them
+// to Golang valid tokens that can be used in time.Parse()
 func (d *Decoder) Translate(dict map[string]string) (string, error) {
 	tokens, err := d.ReadTokens()
 	if err != nil {
@@ -132,6 +137,8 @@ func (d *Decoder) Translate(dict map[string]string) (string, error) {
 	return strings.TrimSpace(golangFormat), nil
 }
 
+// Default CheckValidFunc being used, it checks the next byte,
+// if that is not the same as previous it must be the end of the token.
 func CheckNextPartOfToken(current, next byte) bool {
 	if current == next {
 		return true
@@ -173,7 +180,18 @@ func CheckNextPartOfToken(current, next byte) bool {
 	return false
 }
 
+// Strict CheckValidFunc as an option, it checks the next byte,
+// if that is not the same as previous it must be the end of the token.
+func CheckNextPartOfTokenStrict(current, next byte) bool {
+	if current == next {
+		return true
+	}
+	return false
+}
+
+// Token dictionaries that can be used in Translate.
 var (
+	// Strict has very few options
 	StrictTokens = map[string]string{
 		"YY":        "06",
 		"YYYY":      "2006",
@@ -205,6 +223,7 @@ var (
 		"ZZ":        "-0700",
 		"ZZZ":       "-7:00",
 	}
+	// Standard is a broader function.
 	StandardTokens = map[string]string{
 		"yyyy":      "2006",
 		"yy":        "06",
