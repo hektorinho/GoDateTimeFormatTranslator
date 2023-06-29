@@ -68,13 +68,11 @@ func TestDecodeFormat(t *testing.T) {
 
 	for _, format := range testFormats {
 		dec := NewDecoder(strings.NewReader(format.external))
-		dec.SetFormat(format.external)
-
-		tokens, err := dec.ReadTokens()
+		outputFormat, err := dec.Translate(StandardTokens)
 		if err != nil {
-			t.Errorf("format: failed to read Tokens >> %s", err)
+			t.Errorf("format: failed to translate tokens > %s", err)
 		}
-		format.actualOutput = TranslateTokens(tokens)
+		format.actualOutput = outputFormat
 
 		if format.actualOutput != format.expectedInternal {
 			fmt.Println([]byte(format.expectedInternal))

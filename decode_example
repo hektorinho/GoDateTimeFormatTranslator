@@ -14,8 +14,10 @@ const (
 func main() {
 	dateTime := "2023-06-28 14:35:26"
 	dec := format.NewDecoder(strings.NewReader(myFormat))
-	dec.SetFormat(myFormat)
-	golangFormat := format.TranslateTokens(dec.ReadTokens())
+	golangFormat, err := dec.Translate(format.StandardTokens)
+	if err != nil {
+		log.Fatalf("format: failed to translate tokens >> %s", err)
+	}
 
 	myTime := time.Parse(golangFormat, dateTime)
 }

@@ -8,13 +8,18 @@ import (
 )
 
 type Decoder struct {
-	r      *bufio.Reader
-	Format string
-	tok    Token
+	r   *bufio.Reader
+	tok Token
+
+	CheckValidFunc func(byte, byte) bool
 }
 
 func NewDecoder(r io.Reader) *Decoder {
-	return &Decoder{r: bufio.NewReader(r)}
+	return &Decoder{r: bufio.NewReader(r), CheckValidFunc: CheckNextPartOfToken}
+}
+
+func (d *Decoder) SetCheckValidFunc(fn func(byte, byte) bool) {
+	d.CheckValidFunc = fn
 }
 
 type Token struct {
@@ -47,15 +52,7 @@ const (
 	TimezoneLocation
 )
 
-var (
-	ErrNoFormat = errors.New("no format set for the Decoder, use SetFormat(format string) before running Token()")
-)
-
 func (d *Decoder) Token() (Token, error) {
-	// Check if SetFormat has been run before running Token()
-	if len(d.Format) == 0 {
-		return Token{}, ErrNoFormat
-	}
 	var tok Token
 	for {
 		// advance reader and read current byte
@@ -76,17 +73,12 @@ func (d *Decoder) Token() (Token, error) {
 				tok.nextByte = p[0]
 			}
 		}
-		// Check if current byte is a valid token or separator
-		if tp, ok := validTokens[tok.currentByte]; ok {
-			tok.validDateToken = true
-			tok.dateType = tp
-		}
 		// Continue string if next byte is part of Token
-		if checkNextPartOfToken(tok.currentByte, tok.nextByte) {
+		if d.CheckValidFunc(tok.currentByte, tok.nextByte) {
 			tok.Type += string(tok.currentByte)
 		}
 		// Break token if next byte is from a different Token
-		if !checkNextPartOfToken(tok.currentByte, tok.nextByte) {
+		if !d.CheckValidFunc(tok.currentByte, tok.nextByte) {
 			tok.Type += string(tok.currentByte)
 			tok.Length = len(tok.Type)
 			d.tok = tok
@@ -105,11 +97,6 @@ func (d *Decoder) Token() (Token, error) {
 	}
 }
 
-// set Format for Decoder
-func (d *Decoder) SetFormat(format string) {
-	d.Format = format
-}
-
 func (d *Decoder) ReadTokens() ([]Token, error) {
 	var tokens []Token
 	for {
@@ -125,20 +112,27 @@ func (d *Decoder) ReadTokens() ([]Token, error) {
 	return tokens, nil
 }
 
-func TranslateTokens(tokens []Token) string {
+var (
+	ErrBadFormat = errors.New("format: bad format, not matching dictionary")
+)
+
+func (d *Decoder) Translate(dict map[string]string) (string, error) {
+	tokens, err := d.ReadTokens()
+	if err != nil {
+		return "", ErrBadFormat
+	}
 	var golangFormat string
 	for _, token := range tokens {
-		if token.validDateToken {
-			val := tokenTranslations[token.Type]
+		if val, ok := dict[token.Type]; ok {
 			golangFormat += val
 		} else {
 			golangFormat += token.Type
 		}
 	}
-	return strings.TrimSpace(golangFormat)
+	return strings.TrimSpace(golangFormat), nil
 }
 
-func checkNextPartOfToken(current, next byte) bool {
+func CheckNextPartOfToken(current, next byte) bool {
 	if current == next {
 		return true
 	}
@@ -180,7 +174,7 @@ func checkNextPartOfToken(current, next byte) bool {
 }
 
 var (
-	validTokens = map[byte]DateType{
+	ValidTokens = map[byte]DateType{
 		89:  Year,
 		121: Year,
 		77:  Month,
@@ -199,7 +193,7 @@ var (
 		79:  TimezoneLocation,
 		111: TimezoneLocation,
 	}
-	tokenTranslations = map[string]string{
+	StandardTokens = map[string]string{
 		"yyyy":      "2006",
 		"yy":        "06",
 		"YYYY":      "2006",
