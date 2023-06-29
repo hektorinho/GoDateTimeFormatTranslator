@@ -28,8 +28,6 @@ func main() {
 	}
 
 	myTime := time.Parse(golangFormat, dateTime)
-}
-
 	// 2023-06-28 14:35:26 +0000 UTC
 }
 ```
