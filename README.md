@@ -36,29 +36,29 @@ StandardTokens = map[string]string{
 package main
 
 import (
-    "fmt"
-    "log"
-    "strings"
-    "time"
+      "fmt"
+      "log"
+      "strings"
+      "time"
 
-    format "github.com/hektorinho/goDatetimeFormatTranslator"
+      format "github.com/hektorinho/goDatetimeFormatTranslator"
 )
 
 const (
-    myFormat = "YYYY-MM-dd HH:mm:ss"
+      myFormat = "YYYY-MM-dd HH:mm:ss"
 )
 
 func main() {
-    dateTime := "2023-06-28 14:35:26"
-    dec := format.NewDecoder(strings.NewReader(myFormat))
-    golangFormat, err := dec.Translate(format.StandardTokens)
-    if err != nil {
-        log.Fatalf("format: failed to translate tokens >> %s", err)
-    }
+      dateTime := "2023-06-28 14:35:26"
+      dec := format.NewDecoder(strings.NewReader(myFormat))
+      golangFormat, err := dec.Translate(format.StandardTokens)
+      if err != nil {
+            log.Fatalf("format: failed to translate tokens >> %s", err)
+      }
 
-    myTime := time.Parse(golangFormat, dateTime)
+      myTime := time.Parse(golangFormat, dateTime)
 
-    fmt.Println(myTime)
-    // 2023-06-28 14:35:26 +0000 UTC
+      fmt.Println(myTime)
+      // 2023-06-28 14:35:26 +0000 UTC
 }
 ```
