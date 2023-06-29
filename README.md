@@ -8,6 +8,7 @@ As an example, it will translate something like "YYYY-MM=dd HH:mm:ss" to "2006-0
 package main
 
 import (
+    "fmt"
 	"log"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ func main() {
 	}
 
 	myTime := time.Parse(golangFormat, dateTime)
+    fmt.Println(myTime)
 	// 2023-06-28 14:35:26 +0000 UTC
 }
 ```
