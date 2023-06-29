@@ -8,7 +8,7 @@ As an example, it will translate something like "YYYY-MM=dd HH:mm:ss" to "2006-0
 package main
 
 import (
-    "fmt"
+    	"fmt"
 	"log"
 	"strings"
 	"time"
