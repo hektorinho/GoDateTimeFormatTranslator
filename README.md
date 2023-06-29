@@ -36,7 +36,7 @@ StandardTokens = map[string]string{
 package main
 
 import (
-    	"fmt"
+    "fmt"
 	"log"
 	"strings"
 	"time"
@@ -57,7 +57,7 @@ func main() {
 	}
 
 	myTime := time.Parse(golangFormat, dateTime)
-    	fmt.Println(myTime)
+    fmt.Println(myTime)
 	// 2023-06-28 14:35:26 +0000 UTC
 }
 ```
