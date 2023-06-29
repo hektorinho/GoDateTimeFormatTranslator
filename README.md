@@ -3,6 +3,34 @@ This library allows you to use regular "formatting" rules, sometimes they are re
 
 As an example, it will translate something like "YYYY-MM=dd HH:mm:ss" to "2006-01-02 15:04:05" that can be added right in to your time.Parse arguments.
 
+## You can create you own Validation Function as well as your own Token Dictionary
+The default validation function CheckNextPartOfToken(current, next byte) bool checks if next token is a different kind than previous. It makes a few exceptions for like M in to m to enable Mmm for Jan, Feb etc.
+
+### Code to change CheckValidFunc:
+```golang
+...
+dec.SetCheckValidFunc(CheckNextPartOfToken)
+...
+```
+
+You can also update the Standard Token dictionary that is being used as input to Translate. StandardTokens is a map: map[string]string small subset can be seen below:
+
+```golang
+...
+StandardTokens = map[string]string{
+        ...
+		"M":         "1",
+		"MM":        "01",
+		"MMM":       "Jan",
+		"Mmm":       "Jan",
+		"mmm":       "Jan",
+		"MMMM":      "January",
+		"Mmmm":      "January",
+		"mmmm":      "January",
+        ...
+}
+```
+
 ## Sample code:
 ```golang
 package main
