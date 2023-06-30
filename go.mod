@@ -1,4 +1,4 @@
-// module github.com/hektorinho/goDatetimeFormatTranslator
-module format
+module github.com/hektorinho/tft
+// module format
 
 go 1.20
